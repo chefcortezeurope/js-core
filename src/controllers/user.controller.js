@@ -1,41 +1,54 @@
-const users = [
-    { id: 1, name: "Jose"},
-    { id: 2, name: "Maria"},
-];
+const User = require("../models/User");
 
 //GET /api/users
-exports.getUsers = (req, res) => {
-    res.status(200).json(users);
+exports.getUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
 };
 
 //GET /api/users/:id
-exports.getUserById = (req, res) => {
-    const id = parseInt(req.params.id);
+exports.getUserById = async (req, res) => {
+try {
 
-    const user = user.find((u) => u.id === id);
+    const user = await User.findById(req.params.id);
 
     if(!user) {
         return res.status(404).json({ message: "User not found"});
     }
 
     res.status(200).json(user);
+} catch (error) {
+    res.status(500).json({message: error.message});
+}
 };
 
 //POST /api/users
 
-exports.createUser = (req, res) => {
-    const { name } = req.body;
+exports.createUser = async (req, res) => {
+try {
+    const { name, email } = req.body;
 
-    if(!name) {
-        return res.status(400).json({ message: "Name is required"});
+    if(!name || !email) {
+        return res.status(400).json({ message: "Name and email required"});
     }
 
-    const newUser = {
-        id: users.lenght + 1,
+    const userExists = await User.findOne({ email });
+
+    if (userExists){
+        return res.status(400).json({message: "Email already used"});
+    }
+
+    const user = await User.create ({
         name,
-    };
+        email,
+    });
 
-    users.push(newUser);
-
-    res.status (201).json(newUser);
+   res.status(201).json(user);
+} catch (error) {
+    res.status(500).json({message: error.message});
 }
+};
